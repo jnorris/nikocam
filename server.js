@@ -9,8 +9,8 @@ const cors = require("cors");
 const session = require("express-session");
 const connect = require("connect-mongodb-session")(session);
 
-const fs = require("fs");
 const fsPromises = require("fs/promises");
+const { DateTime } = require("luxon");
 
 // const mongoose = require("./db/connection");
 
@@ -58,17 +58,20 @@ app.get("/", async (req, res) => {
   debug(files);
 
   const getFilemap = (files) => {
-    const re = /^(?<date>\d+)-(?<time>\d+)-(?<idx>\d+).(?<ext>\w+)$/;
+    const re = /^(?<dt>(?<date>\d+)-(?<time>\d+))-(?<idx>\d+).(?<ext>\w+)$/;
     const filemap = {};
     for (const f of files) {
       const m = f.match(re);
+      const info = {...m.groups, filename: f};
+      info.dt = DateTime.fromFormat(info.dt, "yyyyMMdd-HHmmss");
+      debug(info);
       // debug(m);
       const idx = m.groups.idx;
       if (!(idx in filemap)) {
         filemap[idx] = {};
       }
       const ff = filemap[idx];
-      ff[m.groups.ext] = f;
+      ff[m.groups.ext] = info;
     }
     return filemap;
   };
