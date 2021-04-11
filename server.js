@@ -1,3 +1,5 @@
+'use strict';
+
 require("dotenv").config();
 const debug = require("debug")("nikocam");
 const express = require("express");
@@ -7,10 +9,14 @@ const cors = require("cors");
 const session = require("express-session");
 const connect = require("connect-mongodb-session")(session);
 
+const fs = require("fs");
+const fsPromises = require("fs/promises");
+
 // const mongoose = require("./db/connection");
 
 const PORT = process.env.PORT || "2021";
 const SECRET = process.env.SECRET || "secret"
+const MOTION_DIR = process.env.MOTION_DIR;
 
 const app = express();
 app.set("view engine", "ejs");
@@ -46,9 +52,35 @@ app.use(
 //HomeRouter
 //app.use("/", HomeRouter);
 
+app.get("/", async (req, res) => {
+  debug("/");
+  const files = await fsPromises.readdir(MOTION_DIR);
+  debug(files);
+
+  const getFilemap = (files) => {
+    const re = /^(?<date>\d+)-(?<time>\d+)-(?<idx>\d+).(?<ext>\w+)$/;
+    const filemap = {};
+    for (const f of files) {
+      const m = f.match(re);
+      // debug(m);
+      const idx = m.groups.idx;
+      if (!(idx in filemap)) {
+        filemap[idx] = {};
+      }
+      const ff = filemap[idx];
+      ff[m.groups.ext] = f;
+    }
+    return filemap;
+  };
+
+  const filemap = getFilemap(files);
+  debug(filemap);
+  res.render("index", { filemap });
+});
+
 /////////////////////////////////////
 // App Listener
 /////////////////////////////////////
-app.listen(PORT, () =>
-  debug(`Listening on Port ${PORT}`)
-);
+app.listen(PORT, () => {
+  debug(`Listening on Port ${PORT}`);
+});
