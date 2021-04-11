@@ -24,6 +24,7 @@ app.set("view engine", "ejs");
 app.use(cors());
 app.use(methodOverride("_method"));
 app.use(express.static("public"));
+app.use("/m", express.static(MOTION_DIR));
 app.use(morgan("tiny"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -53,32 +54,42 @@ app.use(
 //app.use("/", HomeRouter);
 
 app.get("/", async (req, res) => {
-  debug("/");
   const files = await fsPromises.readdir(MOTION_DIR);
-  debug(files);
 
   const getFilemap = (files) => {
     const re = /^(?<dt>(?<date>\d+)-(?<time>\d+))-(?<idx>\d+).(?<ext>\w+)$/;
-    const filemap = {};
+    const extmap = { mp4: "video", jpg: "image" };
+    const filemap = new Map();
     for (const f of files) {
       const m = f.match(re);
-      const info = {...m.groups, filename: f};
+      if (!m) continue;
+      const type = extmap[m.groups.ext];
+      if (!type) continue;
+      const info = {...m.groups, type: type, filename: f};
       info.dt = DateTime.fromFormat(info.dt, "yyyyMMdd-HHmmss");
-      debug(info);
-      // debug(m);
-      const idx = m.groups.idx;
-      if (!(idx in filemap)) {
-        filemap[idx] = {};
+      const idx = info.idx;
+      let ff = filemap.get(idx);
+      if (!ff) {
+        filemap.set(idx, ff = {});
       }
-      const ff = filemap[idx];
-      ff[m.groups.ext] = info;
+      ff[type] = info;
     }
     return filemap;
   };
 
   const filemap = getFilemap(files);
-  debug(filemap);
-  res.render("index", { filemap });
+
+  const list = [];
+  for (const [k, v] of filemap.entries()) {
+    if (v.image && v.video) {
+      list.push(v);
+    }
+  }
+  list.sort((a, b) => a.video.dt.toMillis() - b.video.dt.toMillis());
+  list.reverse();
+  debug(list);
+
+  res.render("index", { filemap, list, DateTime });
 });
 
 /////////////////////////////////////
