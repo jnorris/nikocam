@@ -17,19 +17,21 @@
 <body>
     <h1 class="title">🐈 Nikocam</h1>
     <section class="has-text-centered">
-    <%_ const f = list[0]; _%>
+    <%_ const f = videos[0]; _%>
     <video id="video" controls autoplay muted <%_ if (f) {
-        %> src="/m/<%= f.video.filename %>"<%
-        %> poster="/m/<%= f.image.filename %>"<%
+        %> src="<%= MOTION_URL %><%= f.video.filename %>"<%
+        %> poster="<%= MOTION_URL %><%= f.image.filename %>"<%
         } %>>
     </video>
     </section>
     
-    <section class="columns">
-    <% for (const f of list) { %>
-        <div class="column">
+    <section class="columns is-multiline">
+    <% for (const f of videos) { %>
+        <div class="column" style="width: 300px; min-width: 300px; max-width: 300px">
             <div class="has-text-centered">
-                <a class="thumb" data-video="/m/<%= f.video.filename %>"><img class="thumb" src="/m/<%= f.image.filename %>"></a>
+                <a class="thumb" data-video="<%= MOTION_URL %><%= f.video.filename %>">
+                    <img class="thumb" src="<%= MOTION_URL %><%= f.image.filename %>">
+                </a>
             </div>
             <div class="has-text-centered"><%= f.video.dt.toLocaleString(DateTime.TIME_SIMPLE); %></div>
         </div>
