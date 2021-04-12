@@ -17,6 +17,7 @@ const MOTION_DIR = process.env.MOTION_DIR;
 
 const app = express();
 app.set("view engine", "ejs");
+app.set("json spaces", 2);
 
 app.use(cors());
 app.use(methodOverride("_method"));
@@ -51,7 +52,7 @@ app.use(
 //app.use("/", HomeRouter);
 
 
-app.get("/files", Ctrl.files);
+app.get("/videos", Ctrl.videos);
 app.get("/", Ctrl.index);
 
 /////////////////////////////////////
