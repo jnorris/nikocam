@@ -18,6 +18,17 @@ const getFiles = async () => {
     }
 };
 
+const infoCache = new Map();
+
+const getInfo = async (file) => {
+    let info = infoCache.get(file);
+    if (info) return info;
+    info = JSON.parse(await fsPromises.readFile(file));
+    infoCache.set(file, info);
+    return info;
+};
+
+
 const getVideos = async () => {
     const files = await fsPromises.readdir(MOTION_DIR);
 
@@ -50,7 +61,7 @@ const getVideos = async () => {
 
         v.image = image;
         promises.push((async () => {
-            v.info = JSON.parse(await fsPromises.readFile(path.resolve(MOTION_DIR, json.filename)));
+            v.info = await getInfo(path.resolve(MOTION_DIR, json.filename));
             return v;
         })());
     }
@@ -61,7 +72,7 @@ const getVideos = async () => {
     for (const v of videos) {
         v.dt = v.dt.toJSON();
     }
-    
+
     return videos;
 };
 
